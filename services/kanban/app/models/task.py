@@ -23,6 +23,14 @@ class Task(BaseModel):
         comment="References tickets.id (no FK for sharding)"
     )
 
+    # 담당자 (Member 서비스 users 테이블 참조)
+    assignee_id = Column(
+        Integer,
+        nullable=True,
+        index=True,
+        comment="References users.id from Member service - 작업 담당자"
+    )
+
     def __repr__(self):
         return f"<Task(id={self.id}, title={self.title})>"
 
