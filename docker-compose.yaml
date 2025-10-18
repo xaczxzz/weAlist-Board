@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kanban-postgres
+    environment:
+      POSTGRES_DB: kanbandb
+      POSTGRES_USER: kanbanuser
+      POSTGRES_PASSWORD: kanbanpass123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - kanban-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kanbanuser"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: kanban-redis
+    command: redis-server --requirepass redispass123
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - kanban-network
+
+  kanban:
+    build:
+      context: ./services/kanban
+      dockerfile: Dockerfile
+    container_name: kanban-api
+    environment:
+      DATABASE_URL: postgresql://kanbanuser:kanbanpass123@postgres:5432/kanbandb
+      REDIS_URL: redis://:redispass123@redis:6379/0
+      ENV: development
+      DEBUG: "True"
+      SECRET_KEY: dev-secret-key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./services/kanban:/app
+    networks:
+      - kanban-network
+    restart: unless-stopped
+
+networks:
+  kanban-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
