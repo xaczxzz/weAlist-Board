@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings
+from pydantic import field_validator, Field
 from functools import lru_cache
+from typing import Union
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -11,14 +13,22 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     PROJECT_NAME: str = "Kanban Service"
     VERSION: str = "1.0.0"
-    CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
-    ]
+    CORS_ORIGINS: Union[str, list[str]] = Field(
+        default=["http://localhost:3000", "http://localhost:8000"]
+    )
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            # 콤마로 구분된 문자열을 리스트로 변환
+            return [origin.strip() for origin in v.split(",")]
+        return v
 
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # .env의 추가 필드 무시
 
 @lru_cache
 def get_settings() -> Settings:
