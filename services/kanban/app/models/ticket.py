@@ -1,5 +1,4 @@
-from sqlalchemy import Column, String, Text, ForeignKey, Enum as SQLEnum
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Text, Integer, Enum as SQLEnum
 from app.models.base import BaseModel
 from app.models.enums import TicketStatus, Priority
 
@@ -21,17 +20,12 @@ class Ticket(BaseModel):
         index=True
     )
 
+    # FK 제거: 샤딩 및 DB 분리 대비
     project_id = Column(
-        ForeignKey("projects.id", ondelete="CASCADE"),
+        Integer,
         nullable=False,
-        index=True
-    )
-
-    project = relationship("Project", back_populates="tickets")
-    tasks = relationship(
-        "Task",
-        back_populates="ticket",
-        cascade="all, delete-orphan"
+        index=True,
+        comment="References projects.id (no FK for sharding)"
     )
 
     def __repr__(self):

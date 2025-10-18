@@ -84,7 +84,11 @@ async def update_workspace(
 
 @router.delete("/{workspace_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_workspace(workspace_id: int, db: Session = Depends(get_db)):
-    """Workspace 삭제 (Cascade로 하위 데이터 모두 삭제)"""
+    """Workspace 삭제 (애플리케이션 레벨에서 CASCADE 처리)"""
+    from app.models.project import Project
+    from app.models.ticket import Ticket
+    from app.models.task import Task
+
     workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
     if not workspace:
         raise HTTPException(
@@ -92,6 +96,27 @@ async def delete_workspace(workspace_id: int, db: Session = Depends(get_db)):
             detail=f"Workspace {workspace_id} not found"
         )
 
+    # 애플리케이션 레벨에서 CASCADE 삭제 (샤딩 대비)
+    # 1. workspace에 속한 모든 project 찾기
+    projects = db.query(Project).filter(Project.workspace_id == workspace_id).all()
+    project_ids = [p.id for p in projects]
+
+    if project_ids:
+        # 2. project들에 속한 모든 ticket 찾기
+        tickets = db.query(Ticket).filter(Ticket.project_id.in_(project_ids)).all()
+        ticket_ids = [t.id for t in tickets]
+
+        if ticket_ids:
+            # 3. ticket들에 속한 모든 task 삭제
+            db.query(Task).filter(Task.ticket_id.in_(ticket_ids)).delete(synchronize_session=False)
+
+        # 4. project들에 속한 모든 ticket 삭제
+        db.query(Ticket).filter(Ticket.project_id.in_(project_ids)).delete(synchronize_session=False)
+
+    # 5. workspace에 속한 모든 project 삭제
+    db.query(Project).filter(Project.workspace_id == workspace_id).delete(synchronize_session=False)
+
+    # 6. workspace 삭제
     db.delete(workspace)
     db.commit()
     return None

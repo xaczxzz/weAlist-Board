@@ -1,5 +1,4 @@
-from sqlalchemy import Column, String, Text, ForeignKey, Enum as SQLEnum, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Text, Integer, Enum as SQLEnum, DateTime
 from app.models.base import BaseModel
 from app.models.enums import TaskStatus
 
@@ -16,13 +15,13 @@ class Task(BaseModel):
     )
     completed_at = Column(DateTime(timezone=True), nullable=True)
 
+    # FK 제거: 샤딩 및 DB 분리 대비
     ticket_id = Column(
-        ForeignKey("tickets.id", ondelete="CASCADE"),
+        Integer,
         nullable=False,
-        index=True
+        index=True,
+        comment="References tickets.id (no FK for sharding)"
     )
-
-    ticket = relationship("Ticket", back_populates="tasks")
 
     def __repr__(self):
         return f"<Task(id={self.id}, title={self.title})>"

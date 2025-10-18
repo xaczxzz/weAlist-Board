@@ -95,7 +95,10 @@ async def update_project(
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(project_id: int, db: Session = Depends(get_db)):
-    """Project 삭제 (Cascade로 하위 Ticket, Task 모두 삭제)"""
+    """Project 삭제 (애플리케이션 레벨에서 CASCADE 처리)"""
+    from app.models.ticket import Ticket
+    from app.models.task import Task
+
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
         raise HTTPException(
@@ -103,6 +106,19 @@ async def delete_project(project_id: int, db: Session = Depends(get_db)):
             detail=f"Project {project_id} not found"
         )
 
+    # 애플리케이션 레벨에서 CASCADE 삭제 (샤딩 대비)
+    # 1. project에 속한 모든 ticket 찾기
+    tickets = db.query(Ticket).filter(Ticket.project_id == project_id).all()
+    ticket_ids = [t.id for t in tickets]
+
+    if ticket_ids:
+        # 2. ticket들에 속한 모든 task 삭제
+        db.query(Task).filter(Task.ticket_id.in_(ticket_ids)).delete(synchronize_session=False)
+
+    # 3. project에 속한 모든 ticket 삭제
+    db.query(Ticket).filter(Ticket.project_id == project_id).delete(synchronize_session=False)
+
+    # 4. project 삭제
     db.delete(project)
     db.commit()
     return None

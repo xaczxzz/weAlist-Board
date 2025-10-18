@@ -95,7 +95,9 @@ async def update_ticket(
 
 @router.delete("/{ticket_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_ticket(ticket_id: int, db: Session = Depends(get_db)):
-    """Ticket 삭제 (Cascade로 하위 Task 모두 삭제)"""
+    """Ticket 삭제 (애플리케이션 레벨에서 CASCADE 처리)"""
+    from app.models.task import Task
+
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
         raise HTTPException(
@@ -103,6 +105,11 @@ async def delete_ticket(ticket_id: int, db: Session = Depends(get_db)):
             detail=f"Ticket {ticket_id} not found"
         )
 
+    # 애플리케이션 레벨에서 CASCADE 삭제 (샤딩 대비)
+    # 1. ticket에 속한 모든 task 삭제
+    db.query(Task).filter(Task.ticket_id == ticket_id).delete(synchronize_session=False)
+
+    # 2. ticket 삭제
     db.delete(ticket)
     db.commit()
     return None
