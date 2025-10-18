@@ -3,16 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base
 
-# 나중에 임포트될 모델들 (현재는 주석 처리)
-# from app.models import (
-#     Workspace,
-#     Project,
-#     Ticket,
-#     Task
-# )
+from app.models import (
+    Workspace,
+    Project,
+    Ticket,
+    Task
+)
 
-# 나중에 임포트될 라우터들 (현재는 주석 처리)
-# from app.api import workspaces, projects, tickets, tasks
+from app.api import workspaces, projects, tickets, tasks
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -49,8 +47,7 @@ async def root():
         "docs": "/docs" if settings.DEBUG else "disabled"
     }
 
-# 나중에 라우터 추가 예정
-# app.include_router(workspaces.router, prefix="/api/workspaces", tags=["workspaces"])
-# app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
-# app.include_router(tickets.router, prefix="/api/tickets", tags=["tickets"])
-# app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
+app.include_router(workspaces.router, prefix="/api/workspaces", tags=["workspaces"])
+app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
+app.include_router(tickets.router, prefix="/api/tickets", tags=["tickets"])
+app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
