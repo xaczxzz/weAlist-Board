@@ -271,3 +271,6 @@ yarn-error.log*
 # Kubernetes secrets (나중에 k8s 추가 시)
 *-secret.yaml
 secrets.yaml
+
+# 개인 학습 자료
+LEARNING.md
