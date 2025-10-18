@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user_id
 from app.models.workspace import Workspace
 from app.schemas.workspace import (
     WorkspaceCreate,
@@ -12,7 +13,11 @@ from app.schemas.workspace import (
 router = APIRouter()
 
 @router.post("/", response_model=WorkspaceResponse, status_code=status.HTTP_201_CREATED)
-async def create_workspace(workspace_in: WorkspaceCreate, db: Session = Depends(get_db)):
+async def create_workspace(
+    workspace_in: WorkspaceCreate,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """새로운 Workspace 생성"""
     existing = db.query(Workspace).filter(Workspace.name == workspace_in.name).first()
     if existing:
@@ -21,7 +26,10 @@ async def create_workspace(workspace_in: WorkspaceCreate, db: Session = Depends(
             detail=f"Workspace '{workspace_in.name}' already exists"
         )
 
-    db_workspace = Workspace(**workspace_in.model_dump())
+    db_workspace = Workspace(
+        **workspace_in.model_dump(),
+        created_by=current_user_id
+    )
     db.add(db_workspace)
     db.commit()
     db.refresh(db_workspace)
@@ -31,7 +39,8 @@ async def create_workspace(workspace_in: WorkspaceCreate, db: Session = Depends(
 async def list_workspaces(
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
 ):
     """Workspace 목록 조회 (페이지네이션)"""
     total = db.query(Workspace).count()
@@ -50,7 +59,11 @@ async def list_workspaces(
     }
 
 @router.get("/{workspace_id}", response_model=WorkspaceResponse)
-async def get_workspace(workspace_id: int, db: Session = Depends(get_db)):
+async def get_workspace(
+    workspace_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """특정 Workspace 조회"""
     workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
     if not workspace:
@@ -64,7 +77,8 @@ async def get_workspace(workspace_id: int, db: Session = Depends(get_db)):
 async def update_workspace(
     workspace_id: int,
     workspace_in: WorkspaceUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
 ):
     """Workspace 정보 수정"""
     workspace = db.query(Workspace).filter(Workspace.id == workspace_id).first()
@@ -78,12 +92,18 @@ async def update_workspace(
     for field, value in update_data.items():
         setattr(workspace, field, value)
 
+    workspace.updated_by = current_user_id
+
     db.commit()
     db.refresh(workspace)
     return workspace
 
 @router.delete("/{workspace_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_workspace(workspace_id: int, db: Session = Depends(get_db)):
+async def delete_workspace(
+    workspace_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """Workspace 삭제 (애플리케이션 레벨에서 CASCADE 처리)"""
     from app.models.project import Project
     from app.models.ticket import Ticket

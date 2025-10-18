@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.database import get_db
+from app.auth import get_current_user_id
 from app.models.task import Task
 from app.models.ticket import Ticket
 from app.models.enums import TaskStatus
@@ -15,7 +16,11 @@ from app.schemas.task import (
 router = APIRouter()
 
 @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
-async def create_task(task_in: TaskCreate, db: Session = Depends(get_db)):
+async def create_task(
+    task_in: TaskCreate,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """새로운 Task 생성"""
     # Ticket 존재 확인
     ticket = db.query(Ticket).filter(Ticket.id == task_in.ticket_id).first()
@@ -25,7 +30,10 @@ async def create_task(task_in: TaskCreate, db: Session = Depends(get_db)):
             detail=f"Ticket {task_in.ticket_id} not found"
         )
 
-    db_task = Task(**task_in.model_dump())
+    db_task = Task(
+        **task_in.model_dump(),
+        created_by=current_user_id
+    )
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
@@ -37,7 +45,8 @@ async def list_tasks(
     status_filter: Optional[TaskStatus] = Query(None, alias="status"),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
 ):
     """Task 목록 조회 (필터링 및 페이지네이션)"""
     query = db.query(Task)
@@ -58,7 +67,11 @@ async def list_tasks(
     }
 
 @router.get("/{task_id}", response_model=TaskResponse)
-async def get_task(task_id: int, db: Session = Depends(get_db)):
+async def get_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """특정 Task 조회"""
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
@@ -72,7 +85,8 @@ async def get_task(task_id: int, db: Session = Depends(get_db)):
 async def update_task(
     task_id: int,
     task_in: TaskUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
 ):
     """Task 정보 수정"""
     task = db.query(Task).filter(Task.id == task_id).first()
@@ -86,12 +100,18 @@ async def update_task(
     for field, value in update_data.items():
         setattr(task, field, value)
 
+    task.updated_by = current_user_id
+
     db.commit()
     db.refresh(task)
     return task
 
 @router.patch("/{task_id}/complete", response_model=TaskResponse)
-async def complete_task(task_id: int, db: Session = Depends(get_db)):
+async def complete_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """Task 완료 처리 (상태를 DONE으로 변경 및 완료 시간 기록)"""
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
@@ -107,12 +127,17 @@ async def complete_task(task_id: int, db: Session = Depends(get_db)):
         )
 
     task.mark_completed()
+    task.updated_by = current_user_id
     db.commit()
     db.refresh(task)
     return task
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_task(task_id: int, db: Session = Depends(get_db)):
+async def delete_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """Task 삭제"""
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:

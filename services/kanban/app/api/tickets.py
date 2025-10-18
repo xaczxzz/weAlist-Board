@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.database import get_db
+from app.auth import get_current_user_id
 from app.models.ticket import Ticket
 from app.models.project import Project
 from app.models.enums import TicketStatus, Priority
@@ -15,7 +16,11 @@ from app.schemas.ticket import (
 router = APIRouter()
 
 @router.post("/", response_model=TicketResponse, status_code=status.HTTP_201_CREATED)
-async def create_ticket(ticket_in: TicketCreate, db: Session = Depends(get_db)):
+async def create_ticket(
+    ticket_in: TicketCreate,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """새로운 Ticket 생성"""
     # Project 존재 확인
     project = db.query(Project).filter(Project.id == ticket_in.project_id).first()
@@ -25,7 +30,10 @@ async def create_ticket(ticket_in: TicketCreate, db: Session = Depends(get_db)):
             detail=f"Project {ticket_in.project_id} not found"
         )
 
-    db_ticket = Ticket(**ticket_in.model_dump())
+    db_ticket = Ticket(
+        **ticket_in.model_dump(),
+        created_by=current_user_id
+    )
     db.add(db_ticket)
     db.commit()
     db.refresh(db_ticket)
@@ -38,7 +46,8 @@ async def list_tickets(
     priority: Optional[Priority] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
 ):
     """Ticket 목록 조회 (필터링 및 페이지네이션)"""
     query = db.query(Ticket)
@@ -61,7 +70,11 @@ async def list_tickets(
     }
 
 @router.get("/{ticket_id}", response_model=TicketResponse)
-async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
+async def get_ticket(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """특정 Ticket 조회"""
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
     if not ticket:
@@ -75,7 +88,8 @@ async def get_ticket(ticket_id: int, db: Session = Depends(get_db)):
 async def update_ticket(
     ticket_id: int,
     ticket_in: TicketUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
 ):
     """Ticket 정보 수정"""
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
@@ -89,12 +103,18 @@ async def update_ticket(
     for field, value in update_data.items():
         setattr(ticket, field, value)
 
+    ticket.updated_by = current_user_id
+
     db.commit()
     db.refresh(ticket)
     return ticket
 
 @router.delete("/{ticket_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_ticket(ticket_id: int, db: Session = Depends(get_db)):
+async def delete_ticket(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    current_user_id: int = Depends(get_current_user_id)
+):
     """Ticket 삭제 (애플리케이션 레벨에서 CASCADE 처리)"""
     from app.models.task import Task
 
