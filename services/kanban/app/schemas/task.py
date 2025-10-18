@@ -10,11 +10,13 @@ class TaskBase(BaseModel):
 
 class TaskCreate(TaskBase):
     ticket_id: int = Field(..., gt=0)
+    assignee_id: Optional[int] = Field(None, gt=0, description="담당자 ID")
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=300)
     description: Optional[str] = None
     status: Optional[TaskStatus] = None
+    assignee_id: Optional[int] = Field(None, gt=0, description="담당자 ID")
 
 class TaskResponse(TaskBase):
     id: int
@@ -22,6 +24,9 @@ class TaskResponse(TaskBase):
     completed_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
+    created_by: int
+    updated_by: Optional[int] = None
+    assignee_id: Optional[int] = None
 
     class Config:
         from_attributes = True
