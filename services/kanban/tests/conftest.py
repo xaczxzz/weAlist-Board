@@ -7,6 +7,7 @@ from sqlalchemy.pool import StaticPool
 from app.main import app
 from app.database import Base, get_db
 from app.models import Workspace, Project, Ticket, Task
+from app.auth import get_current_user_id
 
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
 
@@ -17,6 +18,13 @@ engine = create_engine(
 )
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# 테스트용 user_id
+TEST_USER_ID = 1
+
+def override_get_current_user_id():
+    """테스트 환경에서 JWT 인증을 우회하고 고정된 user_id 반환"""
+    return TEST_USER_ID
 
 @pytest.fixture(scope="function")
 def db():
@@ -36,14 +44,24 @@ def client(db):
         finally:
             pass
 
+    # startup/shutdown event handlers 제거 (테스트 환경)
+    app.router.on_startup = []
+    app.router.on_shutdown = []
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_user_id] = override_get_current_user_id
+
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
 
 @pytest.fixture(scope="function")
 def sample_workspace(db):
-    workspace = Workspace(name="Test Workspace", description="For testing")
+    workspace = Workspace(
+        name="Test Workspace",
+        description="For testing",
+        created_by=TEST_USER_ID
+    )
     db.add(workspace)
     db.commit()
     db.refresh(workspace)
@@ -56,7 +74,8 @@ def sample_project(db, sample_workspace):
         name="Test Project",
         workspace_id=sample_workspace.id,
         status=ProjectStatus.ACTIVE,
-        priority=Priority.HIGH
+        priority=Priority.HIGH,
+        created_by=TEST_USER_ID
     )
     db.add(project)
     db.commit()
@@ -70,7 +89,8 @@ def sample_ticket(db, sample_project):
         title="Test Ticket",
         project_id=sample_project.id,
         status=TicketStatus.OPEN,
-        priority=Priority.MEDIUM
+        priority=Priority.MEDIUM,
+        created_by=TEST_USER_ID
     )
     db.add(ticket)
     db.commit()
@@ -83,7 +103,8 @@ def sample_task(db, sample_ticket):
     task = Task(
         title="Test Task",
         ticket_id=sample_ticket.id,
-        status=TaskStatus.TODO
+        status=TaskStatus.TODO,
+        created_by=TEST_USER_ID
     )
     db.add(task)
     db.commit()
