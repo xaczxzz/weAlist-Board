@@ -17,8 +17,8 @@ services:
     networks:
       - wealist-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U wealist_user -d wealist_db"]
+      interval: 20s
       timeout: 3s
       retries: 3
     restart: unless-stopped
