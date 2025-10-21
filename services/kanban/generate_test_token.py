@@ -13,13 +13,13 @@ SECRET_KEY = "dev-secret-key-change-in-production"
 ALGORITHM = "HS256"
 
 
-def generate_token(user_id: int, expires_hours: int = 24) -> str:
+def generate_token(user_id: int, expires_hours: int = 168) -> str:
     """
     JWT 토큰 생성
 
     Args:
         user_id: 사용자 ID
-        expires_hours: 토큰 만료 시간 (시간 단위)
+        expires_hours: 토큰 만료 시간 (시간 단위, 기본값: 168시간 = 7일)
 
     Returns:
         str: JWT 토큰
@@ -47,8 +47,8 @@ def main():
     parser.add_argument(
         "--expires",
         type=int,
-        default=24,
-        help="토큰 만료 시간 (시간 단위, 기본값: 24)"
+        default=168,
+        help="토큰 만료 시간 (시간 단위, 기본값: 168 = 7일)"
     )
     parser.add_argument(
         "--bearer",
