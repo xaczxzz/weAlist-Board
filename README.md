@@ -99,7 +99,7 @@ cp .env.example .env
 # infrastructure/.env와 동일한 비밀번호로 설정
 nano .env
 
-# 서비스 시작
+# 서비스 시작(앞에 infra 의 docker가 띄운거 확인하고 실행)
 docker-compose up -d
 
 # 로그 확인
