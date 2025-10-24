@@ -1,5 +1,4 @@
 from sqlalchemy import Column, String, Text
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.models.base import BaseModel
 
 class Workspace(BaseModel):

@@ -31,7 +31,7 @@ class Ticket(BaseModel):
 
     # 담당자 (Member 서비스 users 테이블 참조)
     assignee_id = Column(
-        PG_UUID(as_uuid=True),
+        PG_UUID,
         nullable=True,
         index=True,
         comment="References users.id from Member service - 티켓 담당자"

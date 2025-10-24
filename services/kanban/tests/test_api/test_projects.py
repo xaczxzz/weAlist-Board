@@ -1,5 +1,6 @@
 import pytest
 from fastapi import status
+from uuid import UUID
 
 def test_create_project_success(client, sample_workspace):
     """Project 생성 성공 테스트"""
@@ -7,7 +8,7 @@ def test_create_project_success(client, sample_workspace):
         "/api/projects/",
         json={
             "name": "회원 시스템",
-            "workspace_id": sample_workspace.id,
+            "workspace_id": str(sample_workspace.id),
             "status": "ACTIVE",
             "priority": "HIGH"
         }
@@ -15,7 +16,7 @@ def test_create_project_success(client, sample_workspace):
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["name"] == "회원 시스템"
-    assert data["workspace_id"] == sample_workspace.id
+    assert data["workspace_id"] == str(sample_workspace.id)
     assert data["status"] == "ACTIVE"
     assert data["priority"] == "HIGH"
 
@@ -25,7 +26,7 @@ def test_create_project_workspace_not_found(client):
         "/api/projects/",
         json={
             "name": "Test Project",
-            "workspace_id": 99999
+            "workspace_id": str(UUID('00000000-0000-0000-0000-000000000001'))
         }
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -52,11 +53,11 @@ def test_get_project_success(client, sample_project):
     response = client.get(f"/api/projects/{sample_project.id}")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["id"] == sample_project.id
+    assert data["id"] == str(sample_project.id)
 
 def test_get_project_not_found(client):
     """존재하지 않는 Project 조회 시 실패"""
-    response = client.get("/api/projects/99999")
+    response = client.get("/api/projects/" + str(UUID('00000000-0000-0000-0000-000000000001')))
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 def test_update_project_success(client, sample_project):

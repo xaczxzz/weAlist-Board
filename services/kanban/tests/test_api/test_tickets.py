@@ -1,5 +1,6 @@
 import pytest
 from fastapi import status
+from uuid import UUID
 
 def test_create_ticket_success(client, sample_project):
     """Ticket 생성 성공 테스트"""
@@ -7,7 +8,7 @@ def test_create_ticket_success(client, sample_project):
         "/api/tickets/",
         json={
             "title": "로그인 API",
-            "project_id": sample_project.id,
+            "project_id": str(sample_project.id),
             "status": "IN_PROGRESS",
             "priority": "HIGH"
         }
@@ -15,7 +16,7 @@ def test_create_ticket_success(client, sample_project):
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["title"] == "로그인 API"
-    assert data["project_id"] == sample_project.id
+    assert data["project_id"] == str(sample_project.id)
     assert data["status"] == "IN_PROGRESS"
     assert data["priority"] == "HIGH"
 
@@ -25,7 +26,7 @@ def test_create_ticket_project_not_found(client):
         "/api/tickets/",
         json={
             "title": "Test Ticket",
-            "project_id": 99999
+            "project_id": str(UUID('00000000-0000-0000-0000-000000000001'))
         }
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -52,11 +53,11 @@ def test_get_ticket_success(client, sample_ticket):
     response = client.get(f"/api/tickets/{sample_ticket.id}")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["id"] == sample_ticket.id
+    assert data["id"] == str(sample_ticket.id)
 
 def test_get_ticket_not_found(client):
     """존재하지 않는 Ticket 조회 시 실패"""
-    response = client.get("/api/tickets/99999")
+    response = client.get("/api/tickets/" + str(UUID('00000000-0000-0000-0000-000000000001')))
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 def test_update_ticket_success(client, sample_ticket):

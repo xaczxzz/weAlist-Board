@@ -2,25 +2,35 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
+from uuid import UUID
+import os
 
 from app.main import app
 from app.database import Base, get_db
 from app.models import Workspace, Project, Ticket, Task
 from app.auth import get_current_user_id
 
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///:memory:"
+# PostgreSQL 테스트 DB 설정
+KANBAN_DB_HOST = os.getenv("KANBAN_DB_HOST", "localhost")
+KANBAN_DB_PORT = os.getenv("KANBAN_DB_PORT", "5432")
+KANBAN_DB_NAME = os.getenv("KANBAN_DB_NAME", "test_wealist_kanban_db")
+KANBAN_DB_USER = os.getenv("KANBAN_DB_USER", "test_wealist_kanban_user")
+KANBAN_DB_PASSWORD = os.getenv("KANBAN_DB_PASSWORD", "test_wealist_kanban_password")
+
+SQLALCHEMY_TEST_DATABASE_URL = (
+    f"postgresql://{KANBAN_DB_USER}:{KANBAN_DB_PASSWORD}"
+    f"@{KANBAN_DB_HOST}:{KANBAN_DB_PORT}/{KANBAN_DB_NAME}"
+)
 
 engine = create_engine(
     SQLALCHEMY_TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
+    echo=True
 )
 
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # 테스트용 user_id
-TEST_USER_ID = 1
+TEST_USER_ID = UUID('12345678-1234-5678-1234-567812345678')
 
 def override_get_current_user_id():
     """테스트 환경에서 JWT 인증을 우회하고 고정된 user_id 반환"""
@@ -28,12 +38,15 @@ def override_get_current_user_id():
 
 @pytest.fixture(scope="function")
 def db():
-    Base.metadata.create_all(bind=engine)
+    # 테스트 DB 초기화 (기존 데이터 삭제 후 재생성)
+    Base.metadata.drop_all(bind=engine, checkfirst=True)
+    Base.metadata.create_all(bind=engine, checkfirst=True)
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
+        # 테스트 완료 후 DB 정리 (선택 사항, 테스트 격리를 위해)
         Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")

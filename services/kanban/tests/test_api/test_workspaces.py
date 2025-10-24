@@ -1,5 +1,6 @@
 import pytest
 from fastapi import status
+from uuid import UUID
 
 def test_create_workspace_success(client):
     """Workspace 생성 성공 테스트"""
@@ -38,19 +39,19 @@ def test_list_workspaces_with_data(client, sample_workspace):
     data = response.json()
     assert data["total"] == 1
     assert len(data["items"]) == 1
-    assert data["items"][0]["id"] == sample_workspace.id
+    assert data["items"][0]["id"] == str(sample_workspace.id)
 
 def test_get_workspace_success(client, sample_workspace):
     """Workspace 조회 성공"""
     response = client.get(f"/api/workspaces/{sample_workspace.id}")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["id"] == sample_workspace.id
+    assert data["id"] == str(sample_workspace.id)
     assert data["name"] == sample_workspace.name
 
 def test_get_workspace_not_found(client):
     """존재하지 않는 Workspace 조회 시 실패"""
-    response = client.get("/api/workspaces/99999")
+    response = client.get("/api/workspaces/" + str(UUID('00000000-0000-0000-0000-000000000001')))
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 def test_update_workspace_success(client, sample_workspace):
@@ -66,7 +67,7 @@ def test_update_workspace_success(client, sample_workspace):
 def test_update_workspace_not_found(client):
     """존재하지 않는 Workspace 업데이트 시 실패"""
     response = client.patch(
-        "/api/workspaces/99999",
+        "/api/workspaces/" + str(UUID('00000000-0000-0000-0000-000000000001')),
         json={"name": "Updated Name"}
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -82,5 +83,5 @@ def test_delete_workspace_success(client, sample_workspace):
 
 def test_delete_workspace_not_found(client):
     """존재하지 않는 Workspace 삭제 시 실패"""
-    response = client.delete("/api/workspaces/99999")
+    response = client.delete("/api/workspaces/" + str(UUID('00000000-0000-0000-0000-000000000001')))
     assert response.status_code == status.HTTP_404_NOT_FOUND
