@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Text, Integer, Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.models.base import BaseModel
 from app.models.enums import ProjectStatus, Priority
 
@@ -22,7 +23,7 @@ class Project(BaseModel):
 
     # FK 제거: 샤딩 및 DB 분리 대비
     workspace_id = Column(
-        Integer,
+        PG_UUID,
         nullable=False,
         index=True,
         comment="References workspaces.id (no FK for sharding)"

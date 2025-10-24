@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Text, Integer, Enum as SQLEnum
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.models.base import BaseModel
 from app.models.enums import TicketStatus, Priority
 
@@ -22,7 +23,7 @@ class Ticket(BaseModel):
 
     # FK 제거: 샤딩 및 DB 분리 대비
     project_id = Column(
-        Integer,
+        PG_UUID,
         nullable=False,
         index=True,
         comment="References projects.id (no FK for sharding)"
@@ -30,7 +31,7 @@ class Ticket(BaseModel):
 
     # 담당자 (Member 서비스 users 테이블 참조)
     assignee_id = Column(
-        Integer,
+        PG_UUID(as_uuid=True),
         nullable=True,
         index=True,
         comment="References users.id from Member service - 티켓 담당자"

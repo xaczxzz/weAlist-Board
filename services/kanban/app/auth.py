@@ -9,6 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from app.config import settings
 from app.logging_config import get_logger
+from uuid import UUID
 
 logger = get_logger(__name__)
 
@@ -18,7 +19,7 @@ security = HTTPBearer()
 
 def get_current_user_id(
     credentials: HTTPAuthorizationCredentials = Depends(security)
-) -> int:
+) -> UUID:
     """
     JWT 토큰에서 user_id를 추출
 
@@ -28,7 +29,7 @@ def get_current_user_id(
         credentials: HTTP Authorization Bearer 토큰
 
     Returns:
-        int: 사용자 ID
+        UUID: 사용자 ID
 
     Raises:
         HTTPException: 토큰이 유효하지 않을 경우 401 에러
@@ -54,7 +55,7 @@ def get_current_user_id(
             )
 
         logger.debug(f"JWT validated successfully for user_id: {user_id}")
-        return int(user_id)
+        return UUID(user_id)
 
     except JWTError as e:
         logger.error(f"JWT validation failed: {str(e)}")
@@ -67,7 +68,7 @@ def get_current_user_id(
 
 def get_current_user_id_optional(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False))
-) -> Optional[int]:
+) -> Optional[UUID]:
     """
     선택적 인증 - 토큰이 있으면 user_id 반환, 없으면 None
 
@@ -77,7 +78,7 @@ def get_current_user_id_optional(
         credentials: HTTP Authorization Bearer 토큰 (선택)
 
     Returns:
-        Optional[int]: 사용자 ID 또는 None
+        Optional[UUID]: 사용자 ID 또는 None
     """
     if credentials is None:
         return None
@@ -89,6 +90,6 @@ def get_current_user_id_optional(
             algorithms=[settings.ALGORITHM]
         )
         user_id = payload.get("sub")
-        return int(user_id) if user_id else None
+        return UUID(user_id) if user_id else None
     except JWTError:
         return None

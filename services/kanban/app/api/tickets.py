@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from uuid import UUID
 from app.database import get_db
 from app.auth import get_current_user_id
 from app.models.ticket import Ticket
@@ -19,7 +20,7 @@ router = APIRouter()
 async def create_ticket(
     ticket_in: TicketCreate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """새로운 Ticket 생성"""
     # Project 존재 확인
@@ -41,13 +42,13 @@ async def create_ticket(
 
 @router.get("/", response_model=TicketListResponse)
 async def list_tickets(
-    project_id: Optional[int] = Query(None),
+    project_id: Optional[UUID] = Query(None),
     status_filter: Optional[TicketStatus] = Query(None, alias="status"),
     priority: Optional[Priority] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """Ticket 목록 조회 (필터링 및 페이지네이션)"""
     query = db.query(Ticket)
@@ -71,9 +72,9 @@ async def list_tickets(
 
 @router.get("/{ticket_id}", response_model=TicketResponse)
 async def get_ticket(
-    ticket_id: int,
+    ticket_id: UUID,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """특정 Ticket 조회"""
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
@@ -86,10 +87,10 @@ async def get_ticket(
 
 @router.patch("/{ticket_id}", response_model=TicketResponse)
 async def update_ticket(
-    ticket_id: int,
+    ticket_id: UUID,
     ticket_in: TicketUpdate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """Ticket 정보 수정"""
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
@@ -111,9 +112,9 @@ async def update_ticket(
 
 @router.delete("/{ticket_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_ticket(
-    ticket_id: int,
+    ticket_id: UUID,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """Ticket 삭제 (애플리케이션 레벨에서 CASCADE 처리)"""
     from app.models.task import Task
