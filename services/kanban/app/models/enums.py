@@ -5,12 +5,15 @@ class ProjectStatus(str, PyEnum):
     ACTIVE = "ACTIVE"
     COMPLETED = "COMPLETED"
     ON_HOLD = "ON_HOLD"
+    CANCELLED = "CANCELLED"
 
 class TicketStatus(str, PyEnum):
     OPEN = "OPEN"
     IN_PROGRESS = "IN_PROGRESS"
     REVIEW = "REVIEW"
+    TESTING = "TESTING"
     DONE = "DONE"
+    CLOSED = "CLOSED"
     BLOCKED = "BLOCKED"
 
 class TaskStatus(str, PyEnum):
@@ -24,3 +27,17 @@ class Priority(str, PyEnum):
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     URGENT = "URGENT"
+
+class TicketParticipationType(str, PyEnum):
+    ASSIGNEE = "ASSIGNEE"
+    REVIEWER = "REVIEWER"
+    WATCHER = "WATCHER"
+
+class TaskParticipationType(str, PyEnum):
+    ASSIGNEE = "ASSIGNEE"
+    REVIEWER = "REVIEWER"
+
+class TargetType(str, PyEnum):
+    PROJECT = "PROJECT"
+    TICKET = "TICKET"
+    TASK = "TASK"

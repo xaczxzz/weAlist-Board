@@ -3,12 +3,21 @@ from app.models.enums import (
     ProjectStatus,
     TicketStatus,
     TaskStatus,
-    Priority
+    Priority,
+    TicketParticipationType,
+    TaskParticipationType,
+    TargetType,
 )
 from app.models.workspace import Workspace
 from app.models.project import Project
 from app.models.ticket import Ticket
 from app.models.task import Task
+from app.models.project_role import ProjectRole
+from app.models.project_member import ProjectMember
+from app.models.ticket_member import TicketMember
+from app.models.task_member import TaskMember
+from app.models.comment import Comment
+from app.models.attachment import Attachment
 
 __all__ = [
     "Base",
@@ -18,8 +27,17 @@ __all__ = [
     "TicketStatus",
     "TaskStatus",
     "Priority",
+    "TicketParticipationType",
+    "TaskParticipationType",
+    "TargetType",
     "Workspace",
     "Project",
     "Ticket",
     "Task",
+    "ProjectRole",
+    "ProjectMember",
+    "TicketMember",
+    "TaskMember",
+    "Comment",
+    "Attachment",
 ]
