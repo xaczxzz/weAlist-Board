@@ -274,3 +274,6 @@ secrets.yaml
 
 # 개인 학습 자료
 LEARNING.md
+
+# claude 설정
+*.claude/
