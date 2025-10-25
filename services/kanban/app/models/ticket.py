@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Text, Integer, Enum as SQLEnum
+from sqlalchemy import Column, String, Text, Enum as SQLEnum, Date, Boolean
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.models.base import BaseModel
 from app.models.enums import TicketStatus, Priority
 
@@ -22,7 +23,7 @@ class Ticket(BaseModel):
 
     # FK 제거: 샤딩 및 DB 분리 대비
     project_id = Column(
-        Integer,
+        PG_UUID,
         nullable=False,
         index=True,
         comment="References projects.id (no FK for sharding)"
@@ -30,11 +31,21 @@ class Ticket(BaseModel):
 
     # 담당자 (Member 서비스 users 테이블 참조)
     assignee_id = Column(
-        Integer,
+        PG_UUID,
         nullable=True,
         index=True,
         comment="References users.id from Member service - 티켓 담당자"
     )
+
+    # ERD 추가 필드
+    parent_ticket = Column(
+        PG_UUID,
+        nullable=True,
+        index=True,
+        comment="상위 티켓 ID (서브태스크용, self-reference)"
+    )
+    due_date = Column(Date, nullable=True, comment="티켓 마감일")
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True, comment="소프트 삭제 플래그")
 
     def __repr__(self):
         return f"<Ticket(id={self.id}, title={self.title})>"
