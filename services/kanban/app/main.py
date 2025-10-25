@@ -15,7 +15,7 @@ from app.models import (
     Task
 )
 
-from app.api import workspaces, projects, tickets, tasks, health
+from app.api import workspaces, projects, tickets, tasks, health, ticket_types, notifications
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -29,6 +29,8 @@ app = FastAPI(
         {"name": "projects", "description": "Project management"},
         {"name": "tickets", "description": "Ticket management"},
         {"name": "tasks", "description": "Task management"},
+        {"name": "ticket-types", "description": "Ticket type management (custom categories per project)"},
+        {"name": "notifications", "description": "User notification system"},
     ]
 )
 
@@ -99,3 +101,5 @@ app.include_router(workspaces.router, prefix="/api/workspaces", tags=["workspace
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(tickets.router, prefix="/api/tickets", tags=["tickets"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
+app.include_router(ticket_types.router, prefix="/api/projects/{project_id}/ticket-types", tags=["ticket-types"])
+app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])

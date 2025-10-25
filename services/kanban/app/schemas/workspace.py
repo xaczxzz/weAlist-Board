@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 class WorkspaceBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
@@ -14,11 +15,11 @@ class WorkspaceUpdate(BaseModel):
     description: Optional[str] = None
 
 class WorkspaceResponse(WorkspaceBase):
-    id: int
+    id: UUID
     created_at: datetime
     updated_at: datetime
-    created_by: int
-    updated_by: Optional[int] = None
+    created_by: UUID
+    updated_by: Optional[UUID] = None
 
     class Config:
         from_attributes = True

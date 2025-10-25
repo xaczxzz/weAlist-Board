@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 from app.models.enums import ProjectStatus, Priority
 
 class ProjectBase(BaseModel):
@@ -10,7 +11,7 @@ class ProjectBase(BaseModel):
     priority: Priority = Priority.MEDIUM
 
 class ProjectCreate(ProjectBase):
-    workspace_id: int = Field(..., gt=0)
+    workspace_id: UUID = Field(..., gt=0)
 
 class ProjectUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=200)
@@ -19,12 +20,12 @@ class ProjectUpdate(BaseModel):
     priority: Optional[Priority] = None
 
 class ProjectResponse(ProjectBase):
-    id: int
-    workspace_id: int
+    id: UUID
+    workspace_id: UUID
     created_at: datetime
     updated_at: datetime
-    created_by: int
-    updated_by: Optional[int] = None
+    created_by: UUID
+    updated_by: Optional[UUID] = None
 
     class Config:
         from_attributes = True

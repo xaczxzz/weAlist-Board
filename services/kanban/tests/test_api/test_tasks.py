@@ -1,5 +1,6 @@
 import pytest
 from fastapi import status
+from uuid import UUID
 
 def test_create_task_success(client, sample_ticket):
     """Task 생성 성공 테스트"""
@@ -7,14 +8,14 @@ def test_create_task_success(client, sample_ticket):
         "/api/tasks/",
         json={
             "title": "JWT 발급",
-            "ticket_id": sample_ticket.id,
+            "ticket_id": str(sample_ticket.id),
             "status": "TODO"
         }
     )
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["title"] == "JWT 발급"
-    assert data["ticket_id"] == sample_ticket.id
+    assert data["ticket_id"] == str(sample_ticket.id)
     assert data["status"] == "TODO"
     assert data["completed_at"] is None
 
@@ -24,7 +25,7 @@ def test_create_task_ticket_not_found(client):
         "/api/tasks/",
         json={
             "title": "Test Task",
-            "ticket_id": 99999
+            "ticket_id": str(UUID('00000000-0000-0000-0000-000000000001'))
         }
     )
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -51,11 +52,11 @@ def test_get_task_success(client, sample_task):
     response = client.get(f"/api/tasks/{sample_task.id}")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["id"] == sample_task.id
+    assert data["id"] == str(sample_task.id)
 
 def test_get_task_not_found(client):
     """존재하지 않는 Task 조회 시 실패"""
-    response = client.get("/api/tasks/99999")
+    response = client.get("/api/tasks/" + str(UUID('00000000-0000-0000-0000-000000000001')))
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 def test_update_task_success(client, sample_task):

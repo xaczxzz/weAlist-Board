@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from uuid import UUID
 from app.database import get_db
 from app.auth import get_current_user_id
 from app.models.project import Project
@@ -19,7 +20,7 @@ router = APIRouter()
 async def create_project(
     project_in: ProjectCreate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """새로운 Project 생성"""
     # Workspace 존재 확인
@@ -41,13 +42,13 @@ async def create_project(
 
 @router.get("/", response_model=ProjectListResponse)
 async def list_projects(
-    workspace_id: Optional[int] = Query(None),
+    workspace_id: Optional[UUID] = Query(None),
     status_filter: Optional[ProjectStatus] = Query(None, alias="status"),
     priority: Optional[Priority] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """Project 목록 조회 (필터링 및 페이지네이션)"""
     query = db.query(Project)
@@ -71,9 +72,9 @@ async def list_projects(
 
 @router.get("/{project_id}", response_model=ProjectResponse)
 async def get_project(
-    project_id: int,
+    project_id: UUID,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """특정 Project 조회"""
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -86,10 +87,10 @@ async def get_project(
 
 @router.patch("/{project_id}", response_model=ProjectResponse)
 async def update_project(
-    project_id: int,
+    project_id: UUID,
     project_in: ProjectUpdate,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """Project 정보 수정"""
     project = db.query(Project).filter(Project.id == project_id).first()
@@ -111,9 +112,9 @@ async def update_project(
 
 @router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project(
-    project_id: int,
+    project_id: UUID,
     db: Session = Depends(get_db),
-    current_user_id: int = Depends(get_current_user_id)
+    current_user_id: UUID = Depends(get_current_user_id)
 ):
     """Project 삭제 (애플리케이션 레벨에서 CASCADE 처리)"""
     from app.models.ticket import Ticket

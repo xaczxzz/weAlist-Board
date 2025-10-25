@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, Enum as SQLEnum, Date, Boolean
+from sqlalchemy import Column, String, Text, Integer, Enum as SQLEnum, Date, Boolean
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.models.base import BaseModel
 from app.models.enums import ProjectStatus, Priority

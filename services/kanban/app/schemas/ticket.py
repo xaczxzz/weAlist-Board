@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 from app.models.enums import TicketStatus, Priority
 
 class TicketBase(BaseModel):
@@ -10,24 +11,24 @@ class TicketBase(BaseModel):
     priority: Priority = Priority.MEDIUM
 
 class TicketCreate(TicketBase):
-    project_id: int = Field(..., gt=0)
-    assignee_id: Optional[int] = Field(None, gt=0, description="담당자 ID")
+    project_id: UUID = Field(..., gt=0)
+    assignee_id: Optional[UUID] = Field(None, description="담당자 ID")
 
 class TicketUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=300)
     description: Optional[str] = None
     status: Optional[TicketStatus] = None
     priority: Optional[Priority] = None
-    assignee_id: Optional[int] = Field(None, gt=0, description="담당자 ID")
+    assignee_id: Optional[UUID] = Field(None, description="담당자 ID")
 
 class TicketResponse(TicketBase):
-    id: int
-    project_id: int
+    id: UUID
+    project_id: UUID
     created_at: datetime
     updated_at: datetime
-    created_by: int
-    updated_by: Optional[int] = None
-    assignee_id: Optional[int] = None
+    created_by: UUID
+    updated_by: Optional[UUID] = None
+    assignee_id: Optional[UUID] = None
 
     class Config:
         from_attributes = True
