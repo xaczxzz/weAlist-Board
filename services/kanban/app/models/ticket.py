@@ -37,6 +37,14 @@ class Ticket(BaseModel):
         comment="References users.id from Member service - 티켓 담당자"
     )
 
+    # 티켓 타입 (프로젝트별 커스텀 카테고리)
+    ticket_type_id = Column(
+        PG_UUID,
+        nullable=True,
+        index=True,
+        comment="티켓 타입 ID (ticket_types.id 참조) - 프로젝트별 커스텀 카테고리 (예: '개발', '디자인', '버그')"
+    )
+
     # ERD 추가 필드
     parent_ticket = Column(
         PG_UUID,
