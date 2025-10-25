@@ -16,7 +16,7 @@ from app.config import settings
 from app.models import (
     Workspace, Project, Ticket, Task,
     ProjectRole, ProjectMember, TicketMember, TaskMember,
-    Comment, Attachment
+    Comment, Attachment, TicketType, Notification
 )
 
 # this is the Alembic Config object, which provides
