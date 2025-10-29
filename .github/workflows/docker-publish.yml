@@ -32,5 +32,5 @@ jobs:
         file: ./services/kanban/Dockerfile
         push: true
         tags: |
-          your-dockerhub-username/wealist-board-kanban:latest
-          your-dockerhub-username/wealist-board-kanban:${{ github.sha }} 
+          ${{ secrets.DOCKERHUB_USERNAME }}/wealist-board-kanban:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/wealist-board-kanban:${{ github.sha }}
