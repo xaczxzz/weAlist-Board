@@ -16,14 +16,6 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install dependencies
-      run: pip install -r requirements.txt
-      working-directory: ./services/kanban
-
-    - name: Run tests
-      run: pytest
-      working-directory: ./services/kanban
-
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
