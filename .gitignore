@@ -37,7 +37,7 @@ coverage.xml
 .pytest_cache/
 htmlcov/
 .hypothesis/
-.github/
+
 # ====================
 # Virtual Environments
 # ====================
