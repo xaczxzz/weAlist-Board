@@ -33,4 +33,4 @@ jobs:
         push: true
         tags: |
           your-dockerhub-username/wealist-board-kanban:latest
-          your-dockerhub-username/wealist-board-kanban:${{ github.sha }}
+          your-dockerhub-username/wealist-board-kanban:${{ github.sha }} 
